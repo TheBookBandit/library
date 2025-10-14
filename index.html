@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematics Digital Library</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        :root {
+            /* Primitive Color Tokens */
+            --color-white: rgba(255, 255, 255, 1);
+            --color-black: rgba(0, 0, 0, 1);
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-cream-100: rgba(255, 255, 253, 1);
+            --color-gray-200: rgba(245, 245, 245, 1);
+            --color-gray-300: rgba(167, 169, 169, 1);
+            --color-gray-400: rgba(119, 124, 124, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-brown-600: rgba(94, 82, 64, 1);
+            --color-charcoal-700: rgba(31, 33, 33, 1);
+            --color-charcoal-800: rgba(38, 40, 40, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-teal-300: rgba(50, 184, 198, 1);
+            --color-teal-400: rgba(45, 166, 178, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-teal-700: rgba(26, 104, 115, 1);
+            --color-teal-800: rgba(41, 150, 161, 1);
+            --color-red-400: rgba(255, 84, 89, 1);
+            --color-red-500: rgba(192, 21, 47, 1);
+            --color-orange-400: rgba(230, 129, 97, 1);
+            --color-orange-500: rgba(168, 75, 47, 1);
+
+            /* RGB versions for opacity control */
+            --color-brown-600-rgb: 94, 82, 64;
+            --color-teal-500-rgb: 33, 128, 141;
+            --color-slate-900-rgb: 19, 52, 59;
+            --color-slate-500-rgb: 98, 108, 113;
+            --color-red-500-rgb: 192, 21, 47;
+            --color-red-400-rgb: 255, 84, 89;
+            --color-orange-500-rgb: 168, 75, 47;
+            --color-orange-400-rgb: 230, 129, 97;
+
+            /* Background color tokens (Light Mode) */
+            --color-bg-1: rgba(59, 130, 246, 0.08);
+            --color-bg-2: rgba(245, 158, 11, 0.08);
+            --color-bg-3: rgba(34, 197, 94, 0.08);
+            --color-bg-4: rgba(239, 68, 68, 0.08);
+            --color-bg-5: rgba(147, 51, 234, 0.08);
+            --color-bg-6: rgba(249, 115, 22, 0.08);
+            --color-bg-7: rgba(236, 72, 153, 0.08);
+            --color-bg-8: rgba(6, 182, 212, 0.08);
+
+            /* Semantic Color Tokens (Light Mode) */
+            --color-background: var(--color-cream-50);
+            --color-surface: var(--color-cream-100);
+            --color-text: var(--color-slate-900);
+            --color-text-secondary: var(--color-slate-500);
+            --color-primary: var(--color-teal-500);
+            --color-primary-hover: var(--color-teal-600);
+            --color-primary-active: var(--color-teal-700);
+            --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
+            --color-secondary-hover: rgba(var(--color-brown-600-rgb), 0.2);
+            --color-secondary-active: rgba(var(--color-brown-600-rgb), 0.25);
+            --color-border: rgba(var(--color-brown-600-rgb), 0.2);
+            --color-btn-primary-text: var(--color-cream-50);
+            --color-card-border: rgba(var(--color-brown-600-rgb), 0.12);
+            --color-card-border-inner: rgba(var(--color-brown-600-rgb), 0.12);
+            --color-error: var(--color-red-500);
+            --color-success: var(--color-teal-500);
+            --color-warning: var(--color-orange-500);
+            --color-info: var(--color-slate-500);
+            --color-focus-ring: rgba(var(--color-teal-500-rgb), 0.4);
+            --color-select-caret: rgba(var(--color-slate-900-rgb), 0.8);
+
+            /* Common style patterns */
+            --focus-ring: 0 0 0 3px var(--color-focus-ring);
+            --focus-outline: 2px solid var(--color-primary);
+            --status-bg-opacity: 0.15;
+            --status-border-opacity: 0.25;
+
+            /* Typography */
+            --font-family-base: "FKGroteskNeue", "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-family-mono: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            --font-size-xs: 11px;
+            --font-size-sm: 12px;
+            --font-size-base: 14px;
+            --font-size-md: 14px;
+            --font-size-lg: 16px;
+            --font-size-xl: 18px;
+            --font-size-2xl: 20px;
+            --font-size-3xl: 24px;
+            --font-size-4xl: 30px;
+            --font-weight-normal: 400;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 550;
+            --font-weight-bold: 600;
+            --line-height-tight: 1.2;
+            --line-height-normal: 1.5;
+            --letter-spacing-tight: -0.01em;
+
+            /* Spacing */
+            --space-0: 0;
+            --space-1: 1px;
+            --space-2: 2px;
+            --space-4: 4px;
+            --space-6: 6px;
+            --space-8: 8px;
+            --space-10: 10px;
+            --space-12: 12px;
+            --space-16: 16px;
+            --space-20: 20px;
+            --space-24: 24px;
+            --space-32: 32px;
+
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-base: 8px;
+            --radius-md: 10px;
+            --radius-lg: 12px;
+            --radius-full: 9999px;
+
+            /* Shadows */
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+
+            /* Animation */
+            --duration-fast: 150ms;
+            --duration-normal: 250ms;
+            --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+
+            /* Layout */
+            --container-sm: 640px;
+            --container-md: 768px;
+            --container-lg: 1024px;
+            --container-xl: 1280px;
+        }
+
+        /* Dark mode colors */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-gray-400-rgb: 119, 124, 124;
+                --color-teal-300-rgb: 50, 184, 198;
+                --color-gray-300-rgb: 167, 169, 169;
+                --color-gray-200-rgb: 245, 245, 245;
+
+                --color-bg-1: rgba(29, 78, 216, 0.15);
+                --color-bg-2: rgba(180, 83, 9, 0.15);
+                --color-bg-3: rgba(21, 128, 61, 0.15);
+                --color-bg-4: rgba(185, 28, 28, 0.15);
+                --color-bg-5: rgba(107, 33, 168, 0.15);
+                --color-bg-6: rgba(194, 65, 12, 0.15);
+                --color-bg-7: rgba(190, 24, 93, 0.15);
+                --color-bg-8: rgba(8, 145, 178, 0.15);
+
+                --color-background: var(--color-charcoal-700);
+                --color-surface: var(--color-charcoal-800);
+                --color-text: var(--color-gray-200);
+                --color-text-secondary: rgba(var(--color-gray-300-rgb), 0.7);
+                --color-primary: var(--color-teal-300);
+                --color-primary-hover: var(--color-teal-400);
+                --color-primary-active: var(--color-teal-800);
+                --color-secondary: rgba(var(--color-gray-400-rgb), 0.15);
+                --color-secondary-hover: rgba(var(--color-gray-400-rgb), 0.25);
+                --color-secondary-active: rgba(var(--color-gray-400-rgb), 0.3);
+                --color-border: rgba(var(--color-gray-400-rgb), 0.3);
+                --color-error: var(--color-red-400);
+                --color-success: var(--color-teal-300);
+                --color-warning: var(--color-orange-400);
+                --color-info: var(--color-gray-300);
+                --color-focus-ring: rgba(var(--color-teal-300-rgb), 0.4);
+                --color-btn-primary-text: var(--color-slate-900);
+                --color-card-border: rgba(var(--color-gray-400-rgb), 0.2);
+                --color-card-border-inner: rgba(var(--color-gray-400-rgb), 0.15);
+                --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+                --color-select-caret: rgba(var(--color-gray-200-rgb), 0.8);
+            }
+        }
+
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            font-size: var(--font-size-base);
+            line-height: var(--line-height-normal);
+            color: var(--color-text);
+            background-color: var(--color-background);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: var(--container-xl);
+            margin: 0 auto;
+            padding: 0 var(--space-16);
+        }
+
+        /* Header */
+        .header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: var(--space-16) 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-24);
+        }
+
+        .logo {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: var(--space-8);
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: var(--space-12) var(--space-16);
+            padding-left: var(--space-32);
+            font-size: var(--font-size-lg);
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: var(--color-background);
+            color: var(--color-text);
+            transition: all var(--duration-normal) var(--ease-standard);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: var(--focus-ring);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: var(--space-12);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-lg);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: var(--space-8);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-6);
+            padding: var(--space-8) var(--space-16);
+            border-radius: var(--radius-base);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-standard);
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn--primary {
+            background: var(--color-primary);
+            color: var(--color-btn-primary-text);
+        }
+
+        .btn--primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn--secondary {
+            background: var(--color-secondary);
+            color: var(--color-text);
+        }
+
+        .btn--secondary:hover {
+            background: var(--color-secondary-hover);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: var(--space-32) 0;
+        }
+
+        .section {
+            margin-bottom: var(--space-32);
+        }
+
+        .section-title {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-semibold);
+            margin-bottom: var(--space-16);
+            color: var(--color-text);
+        }
+
+        /* Subject Grid */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-16);
+        }
+
+        .subject-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-20);
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-standard);
+        }
+
+        .subject-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary);
+        }
+
+        .subject-card h3 {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-semibold);
+            margin-bottom: var(--space-8);
+            color: var(--color-primary);
+        }
+
+        .subject-card p {
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-8);
+        }
+
+        .book-count {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-primary);
+        }
+
+        /* Books Grid */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--space-16);
+        }
+
+        .book-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-20);
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-standard);
+        }
+
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .book-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            margin-bottom: var(--space-6);
+            color: var(--color-text);
+        }
+
+        .book-author {
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-8);
+        }
+
+        .book-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-8);
+            margin-bottom: var(--space-12);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .book-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+            margin-bottom: var(--space-12);
+        }
+
+        .tag {
+            background: var(--color-bg-1);
+            color: var(--color-primary);
+            padding: var(--space-2) var(--space-8);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .book-actions {
+            display: flex;
+            gap: var(--space-8);
+        }
+
+        .btn--small {
+            padding: var(--space-6) var(--space-12);
+            font-size: var(--font-size-sm);
+        }
+
+        /* Search Results */
+        .search-results {
+            margin-top: var(--space-24);
+        }
+
+        .search-meta {
+            margin-bottom: var(--space-16);
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: var(--space-32);
+            color: var(--color-text-secondary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-24);
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-16);
+        }
+
+        .modal-title {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: var(--font-size-xl);
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            padding: var(--space-4);
+        }
+
+        .close-btn:hover {
+            color: var(--color-text);
+        }
+
+        /* PDF Viewer */
+        .pdf-container {
+            width: 100%;
+            height: 70vh;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            overflow: hidden;
+        }
+
+        .pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Upload Form */
+        .upload-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: var(--space-16);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--space-6);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: var(--space-8) var(--space-12);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            background: var(--color-background);
+            color: var(--color-text);
+            font-size: var(--font-size-base);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: var(--focus-ring);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-8);
+            padding: var(--space-12) var(--space-20);
+            background: var(--color-secondary);
+            border: 2px dashed var(--color-border);
+            border-radius: var(--radius-base);
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-standard);
+        }
+
+        .file-input-label:hover {
+            background: var(--color-secondary-hover);
+            border-color: var(--color-primary);
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-12);
+            margin-bottom: var(--space-24);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .filter-label {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+        }
+
+        .filter-select {
+            padding: var(--space-6) var(--space-12);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--space-16);
+            }
+
+            .search-container {
+                order: -1;
+            }
+
+            .subjects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .books-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                margin: var(--space-16);
+                max-width: calc(100vw - 32px);
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-32);
+            color: var(--color-text-secondary);
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+            margin-right: var(--space-8);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Highlight search matches */
+        .highlight {
+            background: rgba(var(--color-teal-500-rgb), 0.2);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo" onclick="showHomepage()">
+                    <i class="fas fa-book"></i>
+                    Mathematics Library
+                </a>
+                
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search books, authors, subjects, or tags..." id="searchInput">
+                </div>
+                
+                <div class="nav-buttons">
+                    <button class="btn btn--secondary" onclick="showBrowse()">
+                        <i class="fas fa-th-large"></i>
+                        Browse
+                    </button>
+                    <button class="btn btn--primary" onclick="showUpload()">
+                        <i class="fas fa-upload"></i>
+                        Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Homepage -->
+            <div id="homepage" class="page">
+                <section class="section">
+                    <h2 class="section-title">Browse by Subject</h2>
+                    <div class="subjects-grid" id="subjectsGrid">
+                        <!-- Subjects will be populated by JavaScript -->
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-title">Recent Additions</h2>
+                    <div class="books-grid" id="recentBooks">
+                        <!-- Recent books will be populated by JavaScript -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Browse Page -->
+            <div id="browsePage" class="page hidden">
+                <div class="filters" id="filters">
+                    <div class="filter-group">
+                        <label class="filter-label">Subject</label>
+                        <select class="filter-select" id="subjectFilter">
+                            <option value="">All Subjects</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Sort by</label>
+                        <select class="filter-select" id="sortFilter">
+                            <option value="title">Title</option>
+                            <option value="author">Author</option>
+                            <option value="dateAdded">Date Added</option>
+                            <option value="year">Publication Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="books-grid" id="allBooks">
+                    <!-- All books will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div id="searchResults" class="page hidden">
+                <div class="search-meta" id="searchMeta"></div>
+                <div class="books-grid" id="searchResultsGrid">
+                    <!-- Search results will be populated by JavaScript -->
+                </div>
+                <div class="no-results hidden" id="noResults">
+                    <i class="fas fa-search" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                    <p>No books found matching your search.</p>
+                    <p>Try adjusting your search terms or browse by subject.</p>
+                </div>
+            </div>
+
+            <!-- Upload Page -->
+            <div id="uploadPage" class="page hidden">
+                <section class="section">
+                    <h2 class="section-title">Upload New Book</h2>
+                    <form class="upload-form" id="uploadForm">
+                        <div class="form-group">
+                            <label class="form-label">PDF File *</label>
+                            <div class="file-input-container">
+                                <input type="file" class="file-input" id="pdfFile" accept=".pdf" required>
+                                <label for="pdfFile" class="file-input-label">
+                                    <i class="fas fa-upload"></i>
+                                    Choose PDF file...
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="bookTitle">Title *</label>
+                            <input type="text" class="form-control" id="bookTitle" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="bookAuthor">Author *</label>
+                            <input type="text" class="form-control" id="bookAuthor" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="bookSubject">Subject *</label>
+                            <select class="form-control" id="bookSubject" required>
+                                <option value="">Select a subject...</option>
+                                <option value="Real Analysis">Real Analysis</option>
+                                <option value="Complex Analysis">Complex Analysis</option>
+                                <option value="Linear Algebra">Linear Algebra</option>
+                                <option value="Fourier Analysis">Fourier Analysis</option>
+                                <option value="Abstract Algebra">Abstract Algebra</option>
+                                <option value="Topology">Topology</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="bookTags">Tags (comma-separated)</label>
+                            <input type="text" class="form-control" id="bookTags" placeholder="e.g., measure theory, graduate level, topology">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="bookYear">Publication Year</label>
+                            <input type="number" class="form-control" id="bookYear" min="1800" max="2024">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="bookDescription">Description</label>
+                            <textarea class="form-control" id="bookDescription" placeholder="Brief description of the book's content and level..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn--primary">
+                            <i class="fas fa-upload"></i>
+                            Upload Book
+                        </button>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Book Detail Modal -->
+    <div class="modal" id="bookModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Book Details</h3>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalBody">
+                <!-- Book details will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        const books = [
+            {
+                title: "Real Analysis",
+                author: "Walter Rudin",
+                subject: "Real Analysis",
+                tags: ["measure theory", "topology", "advanced undergraduate", "graduate"],
+                filename: "rudin_real_analysis.pdf",
+                filesize: "4.2 MB",
+                dateAdded: "2024-10-01",
+                description: "A comprehensive introduction to real analysis covering measure theory, integration, and functional analysis.",
+                pages: 432,
+                year: 1976
+            },
+            {
+                title: "Complex Analysis",
+                author: "Elias Stein",
+                subject: "Complex Analysis",
+                tags: ["complex variables", "residue theory", "graduate level"],
+                filename: "stein_complex_analysis.pdf",
+                filesize: "3.8 MB",
+                dateAdded: "2024-09-15",
+                description: "Graduate-level treatment of complex analysis with applications.",
+                pages: 384,
+                year: 2003
+            },
+            {
+                title: "Linear Algebra Done Right",
+                author: "Sheldon Axler",
+                subject: "Linear Algebra",
+                tags: ["vector spaces", "linear maps", "eigenvalues", "undergraduate"],
+                filename: "axler_linear_algebra.pdf",
+                filesize: "2.1 MB",
+                dateAdded: "2024-09-20",
+                description: "An innovative approach to linear algebra emphasizing vector spaces and linear maps.",
+                pages: 340,
+                year: 2015
+            },
+            {
+                title: "Fourier Analysis: An Introduction",
+                author: "Elias Stein",
+                subject: "Fourier Analysis",
+                tags: ["fourier series", "fourier transform", "harmonic analysis"],
+                filename: "stein_fourier_analysis.pdf",
+                filesize: "5.1 MB",
+                dateAdded: "2024-08-30",
+                description: "Comprehensive introduction to Fourier analysis and its applications.",
+                pages: 311,
+                year: 2003
+            },
+            {
+                title: "Abstract Algebra",
+                author: "David Dummit",
+                subject: "Abstract Algebra",
+                tags: ["groups", "rings", "fields", "graduate"],
+                filename: "dummit_abstract_algebra.pdf",
+                filesize: "6.8 MB",
+                dateAdded: "2024-09-10",
+                description: "Comprehensive treatment of abstract algebra covering groups, rings, and fields.",
+                pages: 944,
+                year: 2003
+            },
+            {
+                title: "Topology",
+                author: "James Munkres",
+                subject: "Topology",
+                tags: ["point-set topology", "fundamental group", "undergraduate"],
+                filename: "munkres_topology.pdf",
+                filesize: "4.7 MB",
+                dateAdded: "2024-09-05",
+                description: "Introduction to topology with applications to analysis and geometry.",
+                pages: 537,
+                year: 2000
+            }
+        ];
+
+        const subjects = [
+            {
+                name: "Real Analysis",
+                description: "Study of real numbers, sequences, series, continuity, differentiation, and integration",
+                bookCount: 15
+            },
+            {
+                name: "Complex Analysis",
+                description: "Analysis of functions of complex variables",
+                bookCount: 12
+            },
+            {
+                name: "Linear Algebra",
+                description: "Vector spaces, linear transformations, and matrix theory",
+                bookCount: 18
+            },
+            {
+                name: "Fourier Analysis",
+                description: "Fourier series, transforms, and harmonic analysis",
+                bookCount: 8
+            },
+            {
+                name: "Abstract Algebra",
+                description: "Groups, rings, fields, and algebraic structures",
+                bookCount: 14
+            },
+            {
+                name: "Topology",
+                description: "Point-set topology and algebraic topology",
+                bookCount: 10
+            }
+        ];
+
+        // Initialize Fuse.js for search
+        const fuseOptions = {
+            keys: ['title', 'author', 'subject', 'tags', 'description'],
+            threshold: 0.3,
+            ignoreLocation: true,
+            includeScore: true,
+            includeMatches: true
+        };
+        
+        const fuse = new Fuse(books, fuseOptions);
+        
+        let currentBooks = books;
+        let searchTimeout;
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const pages = {
+            homepage: document.getElementById('homepage'),
+            browse: document.getElementById('browsePage'),
+            search: document.getElementById('searchResults'),
+            upload: document.getElementById('uploadPage')
+        };
+
+        // Initialize the app
+        function init() {
+            renderSubjects();
+            renderRecentBooks();
+            populateFilters();
+            setupEventListeners();
+            showHomepage();
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            searchInput.addEventListener('input', handleSearch);
+            
+            document.getElementById('subjectFilter').addEventListener('change', handleFilter);
+            document.getElementById('sortFilter').addEventListener('change', handleSort);
+            
+            document.getElementById('uploadForm').addEventListener('submit', handleUpload);
+            
+            // Close modal on outside click
+            document.getElementById('bookModal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeModal();
+                }
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+                if (e.key === '/' && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+        }
+
+        // Page Navigation
+        function showPage(pageName) {
+            Object.values(pages).forEach(page => page.classList.add('hidden'));
+            pages[pageName].classList.remove('hidden');
+        }
+
+        function showHomepage() {
+            showPage('homepage');
+            searchInput.value = '';
+        }
+
+        function showBrowse() {
+            showPage('browse');
+            renderAllBooks(currentBooks);
+        }
+
+        function showUpload() {
+            showPage('upload');
+        }
+
+        // Render Functions
+        function renderSubjects() {
+            const grid = document.getElementById('subjectsGrid');
+            grid.innerHTML = subjects.map(subject => `
+                <div class="subject-card" onclick="filterBySubject('${subject.name}')">
+                    <h3>${subject.name}</h3>
+                    <p>${subject.description}</p>
+                    <div class="book-count">${subject.bookCount} books</div>
+                </div>
+            `).join('');
+        }
+
+        function renderRecentBooks() {
+            const recent = books
+                .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded))
+                .slice(0, 6);
+            
+            const grid = document.getElementById('recentBooks');
+            grid.innerHTML = recent.map(book => createBookCard(book)).join('');
+        }
+
+        function renderAllBooks(booksToRender = books) {
+            const grid = document.getElementById('allBooks');
+            grid.innerHTML = booksToRender.map(book => createBookCard(book)).join('');
+        }
+
+        function renderSearchResults(results) {
+            const grid = document.getElementById('searchResultsGrid');
+            const meta = document.getElementById('searchMeta');
+            const noResults = document.getElementById('noResults');
+            
+            if (results.length === 0) {
+                grid.innerHTML = '';
+                meta.textContent = '';
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                meta.textContent = `Found ${results.length} book${results.length === 1 ? '' : 's'}`;
+                
+                grid.innerHTML = results.map(result => {
+                    const book = result.item;
+                    const card = createBookCard(book);
+                    
+                    // Highlight matches if available
+                    if (result.matches) {
+                        let highlightedCard = card;
+                        result.matches.forEach(match => {
+                            const { key, value, indices } = match;
+                            if (key === 'title' || key === 'author') {
+                                let highlighted = value;
+                                // Simple highlighting - in a real app you'd want more sophisticated highlighting
+                                const searchTerm = searchInput.value.trim();
+                                if (searchTerm) {
+                                    highlighted = highlighted.replace(
+                                        new RegExp(searchTerm, 'gi'),
+                                        match => `<span class="highlight">${match}</span>`
+                                    );
+                                }
+                                highlightedCard = highlightedCard.replace(value, highlighted);
+                            }
+                        });
+                        return highlightedCard;
+                    }
+                    
+                    return card;
+                }).join('');
+            }
+        }
+
+        function createBookCard(book) {
+            const tags = book.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+            
+            return `
+                <div class="book-card" onclick="showBookDetails('${book.filename}')">
+                    <h3 class="book-title">${book.title}</h3>
+                    <p class="book-author">by ${book.author}</p>
+                    <div class="book-meta">
+                        <span><i class="fas fa-folder"></i> ${book.subject}</span>
+                        <span><i class="fas fa-file-pdf"></i> ${book.filesize}</span>
+                        ${book.pages ? `<span><i class="fas fa-file-alt"></i> ${book.pages} pages</span>` : ''}
+                        ${book.year ? `<span><i class="fas fa-calendar"></i> ${book.year}</span>` : ''}
+                    </div>
+                    <div class="book-tags">
+                        ${tags}
+                    </div>
+                    <div class="book-actions">
+                        <button class="btn btn--primary btn--small" onclick="event.stopPropagation(); viewPDF('${book.filename}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn--secondary btn--small" onclick="event.stopPropagation(); downloadPDF('${book.filename}')">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Search & Filter Functions
+        function handleSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const query = searchInput.value.trim();
+                
+                if (query === '') {
+                    showHomepage();
+                    return;
+                }
+                
+                showPage('search');
+                
+                const results = fuse.search(query);
+                renderSearchResults(results);
+            }, 300);
+        }
+
+        function filterBySubject(subject) {
+            document.getElementById('subjectFilter').value = subject;
+            handleFilter();
+            showBrowse();
+        }
+
+        function handleFilter() {
+            const subject = document.getElementById('subjectFilter').value;
+            
+            currentBooks = subject 
+                ? books.filter(book => book.subject === subject)
+                : books;
+            
+            handleSort();
+        }
+
+        function handleSort() {
+            const sortBy = document.getElementById('sortFilter').value;
+            
+            const sorted = [...currentBooks].sort((a, b) => {
+                switch (sortBy) {
+                    case 'author':
+                        return a.author.localeCompare(b.author);
+                    case 'dateAdded':
+                        return new Date(b.dateAdded) - new Date(a.dateAdded);
+                    case 'year':
+                        return (b.year || 0) - (a.year || 0);
+                    case 'title':
+                    default:
+                        return a.title.localeCompare(b.title);
+                }
+            });
+            
+            renderAllBooks(sorted);
+        }
+
+        function populateFilters() {
+            const subjectFilter = document.getElementById('subjectFilter');
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.name;
+                option.textContent = subject.name;
+                subjectFilter.appendChild(option);
+            });
+        }
+
+        // Book Detail Functions
+        function showBookDetails(filename) {
+            const book = books.find(b => b.filename === filename);
+            if (!book) return;
+            
+            const modal = document.getElementById('bookModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            
+            title.textContent = book.title;
+            
+            const tags = book.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+            
+            body.innerHTML = `
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Author</h4>
+                    <p>${book.author}</p>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Subject</h4>
+                    <p>${book.subject}</p>
+                </div>
+                
+                ${book.description ? `
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Description</h4>
+                        <p>${book.description}</p>
+                    </div>
+                ` : ''}
+                
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Details</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; font-size: 14px;">
+                        <div>File size: ${book.filesize}</div>
+                        ${book.pages ? `<div>Pages: ${book.pages}</div>` : ''}
+                        ${book.year ? `<div>Year: ${book.year}</div>` : ''}
+                        <div>Added: ${new Date(book.dateAdded).toLocaleDateString()}</div>
+                    </div>
+                </div>
+                
+                ${book.tags.length > 0 ? `
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="margin-bottom: 8px; color: var(--color-text-secondary);">Tags</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                            ${tags}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button class="btn btn--primary" onclick="viewPDF('${book.filename}')">
+                        <i class="fas fa-eye"></i> View PDF
+                    </button>
+                    <button class="btn btn--secondary" onclick="downloadPDF('${book.filename}')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('bookModal').classList.remove('active');
+        }
+
+        // PDF Functions
+        function viewPDF(filename) {
+            const book = books.find(b => b.filename === filename);
+            if (!book) return;
+            
+            // Check file size - for demo purposes, we'll use a threshold
+            const sizeInMB = parseFloat(book.filesize);
+            
+            if (sizeInMB > 10) {
+                // For larger files, just download
+                alert(`This file (${book.filesize}) is quite large. Downloading instead of viewing online.`);
+                downloadPDF(filename);
+                return;
+            }
+            
+            // For smaller files, try to open in new tab
+            // In a real implementation, you'd have actual PDF URLs
+            const pdfUrl = `books/${book.subject}/${filename}`;
+            window.open(pdfUrl, '_blank');
+        }
+
+        function downloadPDF(filename) {
+            const book = books.find(b => b.filename === filename);
+            if (!book) return;
+            
+            // In a real implementation, you'd have actual PDF URLs
+            const pdfUrl = `books/${book.subject}/${filename}`;
+            
+            // Create a temporary link to trigger download
+            const link = document.createElement('a');
+            link.href = pdfUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show feedback
+            alert(`Downloading ${book.title}...`);
+        }
+
+        // Upload Functions
+        function handleUpload(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const file = document.getElementById('pdfFile').files[0];
+            
+            if (!file) {
+                alert('Please select a PDF file.');
+                return;
+            }
+            
+            if (file.type !== 'application/pdf') {
+                alert('Please select a valid PDF file.');
+                return;
+            }
+            
+            // Get form values
+            const bookData = {
+                title: document.getElementById('bookTitle').value,
+                author: document.getElementById('bookAuthor').value,
+                subject: document.getElementById('bookSubject').value,
+                tags: document.getElementById('bookTags').value
+                    .split(',')
+                    .map(tag => tag.trim())
+                    .filter(tag => tag.length > 0),
+                year: document.getElementById('bookYear').value || null,
+                description: document.getElementById('bookDescription').value,
+                filename: file.name,
+                filesize: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+                dateAdded: new Date().toISOString().split('T')[0],
+                pages: null // Would be extracted from PDF in real implementation
+            };
+            
+            // In a real implementation, you would:
+            // 1. Upload the file to GitHub using the GitHub API
+            // 2. Update the metadata JSON file
+            // 3. Refresh the book list
+            
+            // For demo purposes, just add to local array
+            books.push(bookData);
+            
+            // Update subjects count
+            const subject = subjects.find(s => s.name === bookData.subject);
+            if (subject) {
+                subject.bookCount++;
+            }
+            
+            // Re-render components
+            renderSubjects();
+            renderRecentBooks();
+            
+            // Reset form
+            e.target.reset();
+            
+            alert(`Successfully uploaded "${bookData.title}"!`);
+            showHomepage();
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
