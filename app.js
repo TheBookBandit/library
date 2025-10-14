@@ -59,36 +59,7 @@ function slugify(str='') {
 function uniqueId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
-
-// Parse filename to metadata: "Author - Title [tag1, tag2].pdf" or "Title - Author.pdf" or "Title.pdf"
-function parseFilenameToMetadata(filename) {
-  const base = filename.replace(/\.pdf$/i, '');
-  let title = base; let author = '';
-  let tags = [];
-  // [tag1, tag2]
-  const tagMatch = base.match(/\[(.*?)\]$/);
-  if (tagMatch) {
-    tags = tagMatch[1].split(',').map(t => t.trim()).filter(Boolean);
-  }
-  const withoutTags = base.replace(/\s*\[(.*?)\]\s*$/, '').trim();
-  // "Author - Title" or "Title - Author"
-  if (withoutTags.includes(' - ')) {
-    const parts = withoutTags.split(' - ').map(s => s.trim());
-    // Heuristic: if first part has a comma or space and last part has > first part length, assume Author - Title
-    if (parts.length >= 2) {
-      const [a, b] = parts;
-      // If a looks like a likely author (contains space, dot, or comma) use Author - Title
-      if (/[\s.,]/.test(a) && b.length >= a.length) {
-        author = a; title = b;
-      } else {
-        title = a; author = b;
-      }
-    }
-  } else {
-    title = withoutTags;
-  }
-  return { title, author, tags };
-}
+function filenameFromPath(p) { return p.split('/').pop(); }
 
 // -------------------------------
 // Persistence
@@ -158,16 +129,8 @@ function rebuildFacets() {
 }
 
 // -------------------------------
-// Scanning Repository
+// Manifest loading (books.json only)
 // -------------------------------
-/*
-  Because GitHub Pages is static, there is no direct filesystem API. The site can discover PDFs in two ways:
-  1) Use a manifest file books.json at the repo root that lists files and metadata (recommended for reliability and speed).
-  2) Attempt to discover files by fetching directory indexes if the host provides them (GitHub Pages does not list directories). So auto-scan must be manifest-based.
-
-  This implementation tries to load /books.json. If missing, it can build a manifest by probing known field folders derived from current state.config.rootFolder and common fields, but ultimately needs a user-provided books.json. A helper generator is provided via Export Library Data.
-*/
-
 async function tryLoadManifest() {
   try {
     const res = await fetch('books.json', { cache: 'no-store' });
@@ -175,108 +138,45 @@ async function tryLoadManifest() {
     const data = await res.json();
     if (!Array.isArray(data)) return null;
     return data;
-  } catch { return null; }
-}
-
-function filenameFromPath(p) { return p.split('/').pop(); }
-
-function enrichBookFromPath(path) {
-  const filename = filenameFromPath(path);
-  const field = path.split('/').slice(-2, -1)[0] || '';
-  const { title, author, tags } = parseFilenameToMetadata(filename);
-  return {
-    id: uniqueId(),
-    title,
-    author,
-    field,
-    tags,
-    description: '',
-    path,
-    filename,
-    sizeBytes: NaN,
-    addedAt: Date.now(),
-    metadataSource: 'filename',
-  };
-}
-
-async function headSize(url) {
-  try {
-    const res = await fetch(url, { method: 'HEAD' });
-    const len = res.headers.get('content-length');
-    if (len) return parseInt(len, 10);
-    return NaN;
-  } catch { return NaN; }
-}
-
-async function extractPdfDocInfo(url) {
-  // Lazy-load pdf.js dynamically to avoid module import issues in non-module context
-  try {
-    // Use global pdfjsLib provided by pdf.min.mjs script tag (module). Create a worker.
-    const pdfjs = (window.pdfjsLib || window['pdfjs-dist/build/pdf']);
-    if (!pdfjs) return null;
-    if (pdfjs.GlobalWorkerOptions) {
-      const ver = pdfjs.version || '4.7.76';
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${ver}/build/pdf.worker.min.mjs`;
-    }
-    const loadingTask = pdfjs.getDocument(url);
-    const pdfDoc = await loadingTask.promise;
-    let docInfo = {};
-    try {
-      const meta = await pdfDoc.getMetadata();
-      docInfo = {
-        title: meta?.info?.Title || meta?.metadata?._metadataMap?.get?.('dc:title') || '',
-        author: meta?.info?.Author || meta?.metadata?._metadataMap?.get?.('dc:creator') || ''
-      };
-    } catch {}
-    try { await pdfDoc.destroy(); } catch {}
-    return docInfo;
   } catch {
     return null;
   }
 }
 
+// -------------------------------
+// Scan books: Only load from books.json, NO metadata extraction
+// -------------------------------
 async function scanBooks() {
   showLoading(true);
 
-  // Load manifest from books.json
-  let manifest = await tryLoadManifest();
-  if (!manifest || !manifest.length) {
-    alert('No books.json manifest found. Please create one or import via Configure.');
+  const manifest = await tryLoadManifest();
+  if (!manifest || manifest.length === 0) {
+    alert('No books.json manifest found. Please create or import one.');
     showLoading(false);
     return;
   }
 
-  // Use existing books from localStorage as base
-  loadBooks();
-  const existingPaths = new Set(state.books.map(b => b.path));
+  // Replace current book list with manifest entries only
+  state.books = manifest.map(item => ({
+    id: item.id || uniqueId(),
+    title: item.title || '',
+    author: item.author || '',
+    field: item.field || '',
+    tags: item.tags || [],
+    description: item.description || '',
+    path: item.path,
+    filename: filenameFromPath(item.path),
+    sizeBytes: typeof item.sizeBytes === 'number' ? item.sizeBytes : NaN,
+    addedAt: item.addedAt || Date.now(),
+    metadataSource: item.metadataSource || 'manifest',
+  }));
 
-  // Add new books not already in list
-  for (const item of manifest) {
-    if (!existingPaths.has(item.path)) {
-      const enriched = {
-        id: item.id || uniqueId(),
-        title: item.title || parseFilenameToMetadata(filenameFromPath(item.path)).title,
-        author: item.author || '',
-        field: item.field || (item.path.split('/').slice(-2, -1)[0] || ''),
-        tags: item.tags || [],
-        description: item.description || '',
-        path: item.path,
-        filename: filenameFromPath(item.path),
-        sizeBytes: typeof item.sizeBytes === 'number' ? item.sizeBytes : NaN,
-        addedAt: item.addedAt || Date.now(),
-        metadataSource: item.metadataSource || 'manifest',
-      };
-      state.books.push(enriched);
-    }
-  }
-  
   saveBooks();
   initFuse();
   rebuildFacets();
   applyFiltersAndRender();
   showLoading(false);
 }
-
 
 // -------------------------------
 // Rendering
@@ -292,7 +192,7 @@ function renderBooks(list) {
   }
   $('#emptyState').style.display = 'none';
   const totalSize = list.reduce((sum, b) => sum + (Number.isFinite(b.sizeBytes) ? b.sizeBytes : 0), 0);
-  $('#resultsCount').textContent = `${list.length} book${list.length>1?'s':''} found`;
+  $('#resultsCount').textContent = `${list.length} book${list.length > 1 ? 's' : ''} found`;
   $('#totalSize').textContent = `Total: ${formatBytes(totalSize)}`;
 
   list.forEach(book => {
@@ -313,7 +213,7 @@ function renderBooks(list) {
         <div class="book-author">👤 ${book.author || 'Unknown author'}</div>
         <div class="book-field">🏷️ ${book.field || 'Uncategorized'}</div>
       </div>
-      <div class="book-tags">${(book.tags||[]).map(t => `<span class="book-tag">${t}</span>`).join('')}</div>
+      <div class="book-tags">${(book.tags || []).map(t => `<span class="book-tag">${t}</span>`).join('')}</div>
       <div class="book-description">${book.description || ''}</div>
       <div class="book-footer">
         <div class="book-size">${Number.isFinite(book.sizeBytes) ? formatBytes(book.sizeBytes) : ''}</div>
@@ -347,10 +247,10 @@ function applyFiltersAndRender() {
     } else {
       const q = query.toLowerCase();
       list = list.filter(b =>
-        (b.title||'').toLowerCase().includes(q) ||
-        (b.author||'').toLowerCase().includes(q) ||
-        (b.field||'').toLowerCase().includes(q) ||
-        (b.tags||[]).some(t => t.toLowerCase().includes(q))
+        (b.title || '').toLowerCase().includes(q) ||
+        (b.author || '').toLowerCase().includes(q) ||
+        (b.field || '').toLowerCase().includes(q) ||
+        (b.tags || []).some(t => t.toLowerCase().includes(q))
       );
     }
   }
@@ -361,21 +261,21 @@ function applyFiltersAndRender() {
   // Tag filters (AND)
   if (activeTags.size > 0) {
     list = list.filter(b => {
-      const bt = new Set((b.tags||[]).map(String));
+      const bt = new Set((b.tags || []).map(String));
       for (const t of activeTags) if (!bt.has(t)) return false; return true;
     });
   }
 
   // Sorting
   const sort = $('#sortSelect').value;
-  list.sort((a,b) => {
+  list.sort((a, b) => {
     switch (sort) {
       case 'title-desc': return a.title.localeCompare(b.title) * -1;
-      case 'author': return (a.author||'').localeCompare(b.author||'');
-      case 'author-desc': return (a.author||'').localeCompare(b.author||'') * -1;
-      case 'field': return (a.field||'').localeCompare(b.field||'');
-      case 'size': return (a.sizeBytes||0) - (b.sizeBytes||0);
-      case 'date': return (a.addedAt||0) - (b.addedAt||0);
+      case 'author': return (a.author || '').localeCompare(b.author || '');
+      case 'author-desc': return (a.author || '').localeCompare(b.author || '') * -1;
+      case 'field': return (a.field || '').localeCompare(b.field || '');
+      case 'size': return (a.sizeBytes || 0) - (b.sizeBytes || 0);
+      case 'date': return (a.addedAt || 0) - (b.addedAt || 0);
       case 'title':
       default: return a.title.localeCompare(b.title);
     }
@@ -393,7 +293,7 @@ function showLoading(show) {
 // PDF Viewer
 // -------------------------------
 async function openPdf(book) {
-  const sizeMB = Number.isFinite(book.sizeBytes) ? book.sizeBytes / (1024*1024) : NaN;
+  const sizeMB = Number.isFinite(book.sizeBytes) ? book.sizeBytes / (1024 * 1024) : NaN;
   const allowInline = !Number.isFinite(sizeMB) || sizeMB <= state.config.maxViewerSizeMB;
   if (!allowInline) {
     window.open(encodeURI(book.path), '_blank');
@@ -432,13 +332,13 @@ async function renderPdfPage() {
   const renderContext = { canvasContext: ctx, viewport };
   await page.render(renderContext).promise;
   $('#pageInfo').textContent = `Page ${state.pdf.pageNum} of ${state.pdf.pageCount}`;
-  $('#zoomLevel').textContent = `${Math.round(state.pdf.scale*100)}%`;
+  $('#zoomLevel').textContent = `${Math.round(state.pdf.scale * 100)}%`;
 }
 
 function closePdf() {
   $('#pdfModal').style.display = 'none';
-  if (state.pdf.pdfDoc) { try { state.pdf.pdfDoc.destroy(); } catch {} }
-  state.pdf = { url:null, pdfDoc:null, pageNum:1, pageCount:1, scale:1.0, minScale:0.5, maxScale:2.5, step:0.1, title:'' };
+  if (state.pdf.pdfDoc) { try { state.pdf.pdfDoc.destroy(); } catch { } }
+  state.pdf = { url: null, pdfDoc: null, pageNum: 1, pageCount: 1, scale: 1.0, minScale: 0.5, maxScale: 2.5, step: 0.1, title: '' };
 }
 
 // -------------------------------
@@ -450,7 +350,7 @@ function openEditModal(book) {
   $('#editTitle').value = book.title || '';
   $('#editAuthor').value = book.author || '';
   $('#editField').value = book.field || '';
-  $('#editTags').value = (book.tags||[]).join(', ');
+  $('#editTags').value = (book.tags || []).join(', ');
   $('#editDescription').value = book.description || '';
   $('#editModal').style.display = 'flex';
 }
@@ -503,9 +403,9 @@ function importBooksJson(file) {
       if (!Array.isArray(arr)) throw new Error('Invalid JSON');
       state.books = arr.map(enrich => ({
         id: enrich.id || uniqueId(),
-        title: enrich.title || parseFilenameToMetadata(filenameFromPath(enrich.path)).title,
+        title: enrich.title || '',
         author: enrich.author || '',
-        field: enrich.field || (enrich.path.split('/').slice(-2, -1)[0] || ''),
+        field: enrich.field || '',
         tags: enrich.tags || [],
         description: enrich.description || '',
         path: enrich.path,
@@ -536,7 +436,7 @@ function bindEvents() {
     $('#clearSearchBtn').style.display = $('#searchInput').value ? 'block' : 'none';
     onSearch();
   });
-  $('#clearSearchBtn').addEventListener('click', () => { $('#searchInput').value=''; $('#clearSearchBtn').style.display='none'; applyFiltersAndRender(); });
+  $('#clearSearchBtn').addEventListener('click', () => { $('#searchInput').value = ''; $('#clearSearchBtn').style.display = 'none'; applyFiltersAndRender(); });
 
   // Filters
   $('#fieldFilter').addEventListener('change', applyFiltersAndRender);
@@ -555,8 +455,8 @@ function bindEvents() {
 
   // PDF modal controls
   $('#closeModalBtn').addEventListener('click', closePdf);
-  $('#prevPageBtn').addEventListener('click', async () => { if (state.pdf.pageNum>1) { state.pdf.pageNum--; await renderPdfPage(); } });
-  $('#nextPageBtn').addEventListener('click', async () => { if (state.pdf.pageNum<state.pdf.pageCount) { state.pdf.pageNum++; await renderPdfPage(); } });
+  $('#prevPageBtn').addEventListener('click', async () => { if (state.pdf.pageNum > 1) { state.pdf.pageNum--; await renderPdfPage(); } });
+  $('#nextPageBtn').addEventListener('click', async () => { if (state.pdf.pageNum < state.pdf.pageCount) { state.pdf.pageNum++; await renderPdfPage(); } });
   $('#zoomInBtn').addEventListener('click', async () => { state.pdf.scale = Math.min(state.pdf.scale + state.pdf.step, state.pdf.maxScale); await renderPdfPage(); });
   $('#zoomOutBtn').addEventListener('click', async () => { state.pdf.scale = Math.max(state.pdf.scale - state.pdf.step, state.pdf.minScale); await renderPdfPage(); });
 
@@ -574,7 +474,7 @@ function bindEvents() {
       field: $('#editField').value.trim(),
       tags: $('#editTags').value.split(',').map(s => s.trim()).filter(Boolean),
       description: $('#editDescription').value.trim(),
-      metadataSource: (state.books[idx].metadataSource || 'filename') + '+manual',
+      metadataSource: (state.books[idx].metadataSource || 'manifest') + '+manual',
     };
     state.books[idx] = updated;
     saveBooks();
